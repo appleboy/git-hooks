@@ -5,29 +5,43 @@
 root_dir="$(pwd)/"
 commit_list=$(git diff-index --cached --name-only --diff-filter=ACMR HEAD)
 error_buffer=""
+js_errors=""
+js_file=""
 for file in $commit_list
 do
     extension=$(echo "$file" | awk -F . '{print $NF}')
     case $extension in
-        "php")
+        php)
             errors=$(php -l $ROOT_DIR$file 2>&1 | grep "Parse error")
-            if [ "$errors" != "" ]; then
+            if [ -n "$errors" ]; then
+                echo "Syntax errors found in file: $file "
                 error_buffer="$error_buffer \n$errors"
             fi
-            echo "Syntax errors found in file: $file "
         ;;
-        "coffee")
-        ;;
-        "js")
+        coffee|js)
+            js_errors=$(grep -i -e 'console\.' $ROOT_DIR$file 2>&1)
+            if [ -n "$js_errors" ]; then
+                echo "Debug messages found in file: $file "
+                if [ -n "$js_file" ]; then
+                    js_file="$js_file, $file"
+                else
+                    js_file="$file"
+                fi
+            fi
         ;;
     esac
 done
 
-if [ "$error_buffer" != "" ]; then
+if [ -n "$error_buffer" ] || [ -n "$js_errors" ]; then
     echo
     echo "These errors were found in try-to-commit files: "
     echo $error_buffer
     echo
+    if [ -n "$js_file" ]; then
+        echo "$js_file files found debug message"
+        echo "Please remove 'console.[log|info|xxxx] debug message' from source code."
+        echo
+    fi
     echo "Can't commit, fix errors first."
     exit 1
 else
