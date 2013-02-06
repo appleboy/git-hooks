@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# Author: Bo-Yi Wu <appleboy.tw@gmail.com>
+
+root_dir="$(pwd)/"
+commit_list=$(git diff-index --cached --name-only --diff-filter=ACMR HEAD)
+error_buffer=""
+for file in $commit_list
+do
+    extension=$(echo "$file" | awk -F . '{print $NF}')
+    case $extension in
+        "php")
+            errors=$(php -l $ROOT_DIR$file 2>&1 | grep "Parse error")
+            if [ "$errors" != "" ]; then
+                error_buffer="$error_buffer \n$errors"
+            fi
+            echo "Syntax errors found in file: $file "
+        ;;
+        "coffee")
+        ;;
+        "js")
+        ;;
+    esac
+done
+
+if [ "$error_buffer" != "" ]; then
+    echo
+    echo "These errors were found in try-to-commit files: "
+    echo $error_buffer
+    echo
+    echo "Can't commit, fix errors first."
+    exit 1
+else
+    echo "Commited successfully."
+fi
