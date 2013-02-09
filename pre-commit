@@ -12,14 +12,14 @@ do
     extension=$(echo "$file" | awk -F . '{print $NF}')
     case $extension in
         php)
-            errors=$(php -l $ROOT_DIR$file 2>&1 | grep "Parse error")
+            errors=$(php -l $root_dir$file 2>&1 | grep "Parse error")
             if [ -n "$errors" ]; then
                 echo "Syntax errors found in file: $file "
                 error_buffer="$error_buffer \n$errors"
             fi
         ;;
         coffee|js)
-            js_errors=$(grep -i -e 'console\.' $ROOT_DIR$file 2>&1)
+            js_errors=$(grep -i -e 'console\.' $root_dir$file 2>&1)
             if [ -n "$js_errors" ]; then
                 echo "Debug messages found in file: $file "
                 if [ -n "$js_file" ]; then
